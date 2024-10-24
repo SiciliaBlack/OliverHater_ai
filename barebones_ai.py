@@ -3,7 +3,7 @@
 import numpy as np
 import random
 # This is your team name
-CREATOR = "TeamName"
+CREATOR = "OliverHater"
 
 
 class PlayerAi:
