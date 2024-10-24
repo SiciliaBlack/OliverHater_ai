@@ -1,9 +1,9 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 import numpy as np
-
+import random
 # This is your team name
-CREATOR = "BarebonesAI"
+CREATOR = "TeamName"
 
 
 class PlayerAi:
@@ -15,8 +15,10 @@ class PlayerAi:
         self.team = CREATOR  # Mandatory attribute
         self.ntanks = {}
         self.nships = {}
-
+        self.x = None
+        self.y = None
     def run(self, t: float, dt: float, info: dict, game_map: np.ndarray):
+        
         """
         This is the main function that will be called by the game engine.
 
@@ -76,7 +78,7 @@ class PlayerAi:
         # base.build_tank(): build a tank
         # base.build_ship(): build a ship
         # base.build_jet(): build a jet
-
+        
         # Iterate through all my bases (vehicles belong to bases)
         for base in myinfo["bases"]:
             # Bookkeeping
@@ -84,21 +86,24 @@ class PlayerAi:
             if uid not in self.ntanks:
                 self.ntanks[uid] = 0
                 self.nships[uid] = 0
-
             # Firstly, each base should build a mine if it has less than 3 mines
             if base.mines < 3:
                 if base.crystal > base.cost("mine"):
                     base.build_mine()
             # If we have enough mines, pick something at random
             else:
-                if self.ntanks[uid] < 5:
+                if self.ntanks[uid] < 1:
                     if base.crystal > base.cost("tank"):
                         tank = base.build_tank(heading=360 * np.random.random())
                         self.ntanks[uid] += 1
-                elif self.nships[uid] < 3:
+                
+                elif self.nships[uid] < 4:
                     if base.crystal > base.cost("ship"):
                         ship = base.build_ship(heading=360 * np.random.random())
                         self.nships[uid] += 1
+                elif base.mines < 4:
+                    if base.crystal > base.cost("mine"):
+                        base.build_mine()
                 elif base.crystal > base.cost("jet"):
                     jet = base.build_jet(heading=360 * np.random.random())
 
@@ -168,7 +173,7 @@ class PlayerAi:
                     # If the tank position is the same as the previous position,
                     # set a random heading
                     if tank.stuck:
-                        tank.set_heading(np.random.random() * 360.0)
+                        tank.set_heading(tank.heading+5)
                     # Else, if there is a target, go to the target
                     elif target is not None:
                         tank.goto(*target)
@@ -181,14 +186,35 @@ class PlayerAi:
                     # convert the ship to a base if it is far from the owning base,
                     # set a random heading otherwise
                     if ship.stuck:
-                        if ship.get_distance(ship.owner.x, ship.owner.y) > 20:
+                        if ship.get_distance(ship.owner.x, ship.owner.y) > 2**0.5*40:
                             ship.convert_to_base()
                         else:
-                            ship.set_heading(np.random.random() * 360.0)
-
+                            ship.set_heading(ship.heading+10)
+            
         # Iterate through all my jets
         if "jets" in myinfo:
             for jet in myinfo["jets"]:
-                # Jets simply go to the target if there is one, they never get stuck
+                if self.x:
+                    if jet.get_distance(self.x,self.y) > 10:
+                        jet.goto(self.x,self.y)    
+                    else:
+                        x = random.randint(0, len(game_map)-1)
+                        y = random.randint(0, len(game_map)-1)
+                        while game_map[x][y] != -1:
+                            x = random.randint(0, len(game_map)-1)
+                            y = random.randint(0, len(game_map)-1)
+                else:
+                    x = random.randint(0, len(game_map)-1)
+                    y = random.randint(0, len(game_map)-1)
+                    while game_map[x][y] != -1:
+                        x = random.randint(0, len(game_map)-1)
+                        y = random.randint(0, len(game_map)-1)
+                
+# =============================================================================
+#                 if jet.get_distance(jet.owner.x, jet.owner.y) > 100:
+#                     jet.set_heading(jet.get_heading+120)
+#                 # Jets simply go to the target if there is one, they never get stuck
+# =============================================================================
                 if target is not None:
                     jet.goto(*target)
+                
