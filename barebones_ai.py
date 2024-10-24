@@ -15,6 +15,7 @@ class PlayerAi:
         self.team = CREATOR  # Mandatory attribute
         self.ntanks = {}
         self.nships = {}
+        self.njets = {}
         self.x = None
         self.y = None
     def run(self, t: float, dt: float, info: dict, game_map: np.ndarray):
@@ -86,22 +87,33 @@ class PlayerAi:
             if uid not in self.ntanks:
                 self.ntanks[uid] = 0
                 self.nships[uid] = 0
+                self.njets[uid] = 0
             # Firstly, each base should build a mine if it has less than 3 mines
-            if base.mines < 3:
+            if base.mines < 2:
                 if base.crystal > base.cost("mine"):
                     base.build_mine()
             # If we have enough mines, pick something at random
             else:
+                if len(myinfo["bases"])<2:
+                    if base.crystal > base.cost("ship"):
+                        ship = base.build_ship(heading=360 * np.random.random())
+                        self.nships[uid] += 1
                 if self.ntanks[uid] < 1:
                     if base.crystal > base.cost("tank"):
                         tank = base.build_tank(heading=360 * np.random.random())
                         self.ntanks[uid] += 1
-                
-                elif self.nships[uid] < 4:
+                elif self.nships[uid] < 1:
                     if base.crystal > base.cost("ship"):
                         ship = base.build_ship(heading=360 * np.random.random())
                         self.nships[uid] += 1
-                elif base.mines < 4:
+                
+                elif self.njets[uid] < 3:
+                    jet = base.build_jet(heading=360 * np.random.random())
+                elif self.nships[uid] < 3 and len(myinfo["bases"])<5:
+                    if base.crystal > base.cost("ship"):
+                        ship = base.build_ship(heading=360 * np.random.random())
+                        self.nships[uid] += 1
+                elif base.mines < 3:
                     if base.crystal > base.cost("mine"):
                         base.build_mine()
                 elif base.crystal > base.cost("jet"):
@@ -186,7 +198,7 @@ class PlayerAi:
                     # convert the ship to a base if it is far from the owning base,
                     # set a random heading otherwise
                     if ship.stuck:
-                        if ship.get_distance(ship.owner.x, ship.owner.y) > 2**0.5*40:
+                        if (np.array([ship.get_distance(base.x, base.y)for base in myinfo["bases"]]) > 2**0.5*40).all():
                             ship.convert_to_base()
                         else:
                             ship.set_heading(ship.heading+10)
