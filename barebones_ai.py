@@ -206,6 +206,8 @@ class PlayerAi:
         # Iterate through all my jets
         if "jets" in myinfo:
             for jet in myinfo["jets"]:
+                if target is not None:
+                    jet.goto(*target)
                 if self.x:
                     if jet.get_distance(self.x,self.y) > 10:
                         jet.goto(self.x,self.y)    
@@ -227,6 +229,3 @@ class PlayerAi:
 #                     jet.set_heading(jet.get_heading+120)
 #                 # Jets simply go to the target if there is one, they never get stuck
 # =============================================================================
-                if target is not None:
-                    jet.goto(*target)
-                
