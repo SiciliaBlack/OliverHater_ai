@@ -107,7 +107,7 @@ class PlayerAi:
                         ship = base.build_ship(heading=360 * np.random.random())
                         self.nships[uid] += 1
                 
-                elif self.njets[uid] < 3:
+                elif self.njets[uid] < 3 and base.crystal >= base.cost('jet'):
                     jet = base.build_jet(heading=360 * np.random.random())
                 elif self.nships[uid] < 3 and len(myinfo["bases"])<5:
                     if base.crystal > base.cost("ship"):
